@@ -1,16 +1,11 @@
 import Foundation
 
 private func main(arguments: [String]) {
-//    let arguments = arguments.dropFirst()
-//    guard let input = arguments.first else {
-//        print("inputの引数を入力してください😡")
-//        return
-//    }
-    let ja = "/Users/yuta24/work/wantedly/yashima-ios/namecard-scanner/ja.lproj/Localizable.strings"
-    let en = "/Users/yuta24/work/wantedly/yashima-ios/namecard-scanner/en.lproj/Localizable.strings"
-    let command = DiffString(paths: [en], base: ja)
-//    let directoryPath = FileManager.default.currentDirectoryPath
-//    let generator = DiffString(path: directoryPath)
+    let arguments = arguments.dropFirst()
+    guard arguments.count >= 2 else { print("please input more than 2 files."); return }
+    guard let base = arguments.last else { return }
+    let targets = arguments.dropLast()
+    let command = DiffString(paths: Array(targets), base: base)
     command.execute()
 }
 
