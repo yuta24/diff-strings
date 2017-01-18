@@ -3,12 +3,47 @@ import PathKit
 import Result
 import Commandant
 
-private func convert(entries: [StringsFileParser.Entry]) -> [String: String] {
+private func convert(entries: [Parser.Entry]) -> [String: String] {
     var dict = [String: String]()
     entries.forEach { (entry) in
         dict[entry.key] = entry.translation
     }
     return dict
+}
+
+enum ParserError: Error {
+    case invalidFormat
+}
+
+struct Parser {
+    public struct Entry {
+        let key: String
+        var keyStructure: [String] {
+            return key.components(separatedBy: CharacterSet(charactersIn: "."))
+        }
+        let translation: String
+
+        init(key: String, translation: String) {
+            self.key = key
+            self.translation = translation
+        }
+    }
+
+    let entries: [Entry]
+
+    static func create(_ path: String) throws -> Parser {
+        let data = try Data(contentsOf: URL(fileURLWithPath: path), options: NSData.ReadingOptions(rawValue: 0))
+
+        let plist = try PropertyListSerialization
+            .propertyList(from: data, format: nil)
+        print(plist)
+
+        guard let dict = plist as? [String: String] else {
+            throw ParserError.invalidFormat
+        }
+
+        return Parser(entries: dict.map { Entry(key: $0, translation: $1) })
+    }
 }
 
 enum DiffStringError: Error {
@@ -53,10 +88,9 @@ struct DiffStringCommand: CommandProtocol {
         return Result.success()
     }
 
-    private func loadEntries(path: String) -> [StringsFileParser.Entry] {
-        let parser = StringsFileParser()
+    private func loadEntries(path: String) -> [Parser.Entry] {
         do {
-            try parser.parseFile(at: Path(path))
+            let parser = try Parser.create(path)
             return parser.entries
         } catch {
             print(error)
@@ -64,7 +98,7 @@ struct DiffStringCommand: CommandProtocol {
         }
     }
 
-    private func missingKeys(target: [StringsFileParser.Entry], base: [StringsFileParser.Entry]) -> [String] {
+    private func missingKeys(target: [Parser.Entry], base: [Parser.Entry]) -> [String] {
         let base = convert(entries: base)
         let target = convert(entries: target)
         var ret = [String]()
