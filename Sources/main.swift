@@ -1,12 +1,21 @@
 import Foundation
+import Commandant
 
 private func main(arguments: [String]) {
-    let arguments = arguments.dropFirst()
-    guard arguments.count >= 2 else { print("please input more than 2 files."); return }
-    guard let base = arguments.last else { return }
-    let targets = arguments.dropLast()
-    let command = DiffString(paths: Array(targets), base: base)
-    command.execute()
+    let commands = CommandRegistry<DiffStringError>()
+    commands.register(DiffStringCommand())
+
+    if let verb = arguments.first {
+        let split = verb.components(separatedBy: "/")
+        let arguments = arguments.dropFirst()
+        guard let command = split.last, let _ = commands.run(command: command, arguments: Array(arguments)) else {
+            print("Unrecognized command.")
+            return
+        }
+        // success or failure.
+    } else {
+        print("No command given.")
+    }
 }
 
 main(arguments: CommandLine.arguments)
