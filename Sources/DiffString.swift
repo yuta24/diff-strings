@@ -36,7 +36,6 @@ struct Parser {
 
         let plist = try PropertyListSerialization
             .propertyList(from: data, format: nil)
-        print(plist)
 
         guard let dict = plist as? [String: String] else {
             throw ParserError.invalidFormat
